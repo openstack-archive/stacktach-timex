@@ -6,6 +6,20 @@ from setuptools import setup, find_packages
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
+desc = """timex
+=====
+
+A time expressions library implementing a mini-language for manipulating
+datetimes.
+
+Much like regular expressions provide a mini-language for performing certain
+operation on strings, Timex's time expressions provide a convenient way of
+expressing datetime and date-range operations. These expressions are strings,
+and can be safely read from a config file or user input.
+
+Read README.md for syntax and examples.
+"""
+
 
 req_file = os.path.join(os.path.dirname(__file__), "requirements.txt")
 install_reqs = [str(r.req) for r in parse_requirements(req_file)]
@@ -30,7 +44,7 @@ setup(
     ],
     url='https://github.com/StackTach/timex',
     scripts=[],
-    long_description=read('README.md'),
+    long_description=desc,
     install_requires=install_reqs,
 
     zip_safe=False
