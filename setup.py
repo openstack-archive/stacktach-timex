@@ -1,5 +1,4 @@
 import os
-from pip.req import parse_requirements
 from setuptools import setup, find_packages
 
 
@@ -19,11 +18,6 @@ and can be safely read from a config file or user input.
 
 Read README.md for syntax and examples.
 """
-
-
-req_file = os.path.join(os.path.dirname(__file__), "requirements.txt")
-install_reqs = [str(r.req) for r in parse_requirements(req_file)]
-
 
 setup(
     name='timex',
@@ -45,7 +39,10 @@ setup(
     url='https://github.com/StackTach/timex',
     scripts=[],
     long_description=desc,
-    install_requires=install_reqs,
+    install_requires=[
+        "ply",
+        "six >= 1.5.2",
+    ],
 
     zip_safe=False
 )
