@@ -21,7 +21,7 @@ Read README.md for syntax and examples.
 
 setup(
     name='timex',
-    version='0.10.0',
+    version='0.20.0',
     author='Monsyne Dragon',
     author_email='mdragon@rackspace.com',
     description=("A time expressions library implementing a mini-language "
@@ -36,7 +36,7 @@ setup(
         'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
     ],
-    url='https://github.com/StackTach/timex',
+    url='https://github.com/stackforge/stacktach-timex',
     scripts=[],
     long_description=desc,
     install_requires=[
