@@ -28,3 +28,8 @@ nosetests.xml
 
 # Translations
 *.mo
+
+# IDE Project Files
+*.project
+*.pydev*
+*.idea

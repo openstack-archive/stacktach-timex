@@ -1,14 +1,34 @@
-import sys, os
+#!/usr/bin/env python
+# -*- encoding: utf-8 -*-
+#
+# Copyright © 2014 Rackspace Hosting.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
 import logging
+import os
 
 import ply.yacc
 
-from timex.lexer import TimexLexer
+from timex.expression import Duration
+from timex.expression import Minus
+from timex.expression import Plus
+from timex.expression import Replace
+from timex.expression import TimeRangeExpression
+from timex.expression import TimeRangeFunction
 from timex.expression import TimexParserError
-from timex.expression import Replace, Plus, Minus
-from timex.expression import Duration, Variable
-from timex.expression import TimeRangeFunction, TimeRangeExpression
-
+from timex.expression import Variable
+from timex.lexer import TimexLexer
 
 
 """
@@ -53,7 +73,6 @@ unit : SECOND
 """
 
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -62,7 +81,7 @@ def parse(string):
 
 
 class TimexParser(object):
-    """ LALR parser for time expression mini-language."""
+    """LALR parser for time expression mini-language."""
     tokens = TimexLexer.tokens
 
     def __init__(self, debug=False, lexer_class=None, start='time_expression'):
@@ -70,15 +89,15 @@ class TimexParser(object):
         self.start = start
         if not self.__doc__:
             raise TimexParserError("Docstring information is missing. "
-                    "Timex uses PLY which requires docstrings for "
-                    "configuration.")
+                                   "Timex uses PLY which requires "
+                                   "docstrings for configuration.")
         self.lexer_class = lexer_class or TimexLexer
 
     def _parse_table(self):
         tabdir = os.path.dirname(__file__)
         try:
             module_name = os.path.splitext(os.path.split(__file__)[1])[0]
-        except:
+        except Exception:
             module_name = __name__
         table_module = '_'.join([module_name, self.start, 'parsetab'])
         return (tabdir, table_module)
@@ -89,11 +108,11 @@ class TimexParser(object):
         tabdir, table_module = self._parse_table()
         parser = ply.yacc.yacc(module=self,
                                debug=self.debug,
-                               tabmodule = table_module,
-                               outputdir = tabdir,
+                               tabmodule=table_module,
+                               outputdir=tabdir,
                                write_tables=0,
-                               start = self.start,
-                               errorlog = logger)
+                               start=self.start,
+                               errorlog=logger)
 
         return parser.parse(string, lexer=lexer)
 
@@ -106,7 +125,7 @@ class TimexParser(object):
 
     def p_error(self, t):
         raise TimexParserError('Parse error at %s:%s near token %s (%s)' %
-                                (t.lineno, t.col, t.value, t.type))
+                               (t.lineno, t.col, t.value, t.type))
 
     def p_time_expression(self, p):
         """time_expression : timerange_expression
@@ -189,7 +208,8 @@ class TimexParser(object):
                 | HOUR
                 | DAY
                 | MONTH
-                | YEAR"""
+                | YEAR
+        """
         unit = TimexLexer.reserved_words[p[1]]
         unit = unit.lower()
         p[0] = unit

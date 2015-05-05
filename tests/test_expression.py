@@ -1,19 +1,33 @@
+#!/usr/bin/env python
+# -*- encoding: utf-8 -*-
+#
+# Copyright © 2014 Rackspace Hosting.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
 import datetime
 
-#for Python2.6 compatability.
+# for Python2.6 compatability.
 import unittest2 as unittest
-import mock
-import six
 
 from timex import expression
 
 
 class TestTimestamp(unittest.TestCase):
-
     def setUp(self):
         super(TestTimestamp, self).setUp()
-        self.dt = datetime.datetime(2014, 8, 1, 2 ,10, 23, 550)
-        self.other_dt = datetime.datetime(2014, 8, 7, 2 ,0, 0, 0)
+        self.dt = datetime.datetime(2014, 8, 1, 2, 10, 23, 550)
+        self.other_dt = datetime.datetime(2014, 8, 7, 2, 0, 0, 0)
         self.timestamp = expression.Timestamp(self.dt)
 
     def test_timestamp_properties(self):
@@ -101,14 +115,18 @@ class TestTimestamp(unittest.TestCase):
         self.assertEqual(res.timestamp, expected)
 
         expected = datetime.datetime(2014, 8, 1, 0, 0, 0, 0)
-        res = self.timestamp % expression.Duration(hour=0, minute=0, second=0, microsecond=0)
+        res = self.timestamp % expression.Duration(hour=0, minute=0, second=0,
+                                                   microsecond=0)
         self.assertEqual(res.timestamp, expected)
 
     def test_handle_ambig_duration(self):
         d = expression.Duration(hour=10, unknown=2)
-        self.assertRaises(expression.TimexExpressionError, self.timestamp.__add__, d)
-        self.assertRaises(expression.TimexExpressionError, self.timestamp.__sub__, d)
-        self.assertRaises(expression.TimexExpressionError, self.timestamp.__mod__, d)
+        self.assertRaises(expression.TimexExpressionError,
+                          self.timestamp.__add__, d)
+        self.assertRaises(expression.TimexExpressionError,
+                          self.timestamp.__sub__, d)
+        self.assertRaises(expression.TimexExpressionError,
+                          self.timestamp.__mod__, d)
 
     def test_total_seconds(self):
         self.assertFalse(self.timestamp.is_range)
@@ -116,13 +134,12 @@ class TestTimestamp(unittest.TestCase):
 
 
 class TestTimeRange(unittest.TestCase):
-
     def setUp(self):
         super(TestTimeRange, self).setUp()
-        self.begin_dt = datetime.datetime(2014, 8, 1, 2 ,10, 23, 550)
-        self.end_dt = datetime.datetime(2014, 8, 2, 2 ,10, 23, 550)
-        self.middle_dt = datetime.datetime(2014, 8, 1, 17 ,30, 10, 25)
-        self.other_dt = datetime.datetime(2014, 8, 7, 2 ,0, 0, 0)
+        self.begin_dt = datetime.datetime(2014, 8, 1, 2, 10, 23, 550)
+        self.end_dt = datetime.datetime(2014, 8, 2, 2, 10, 23, 550)
+        self.middle_dt = datetime.datetime(2014, 8, 1, 17, 30, 10, 25)
+        self.other_dt = datetime.datetime(2014, 8, 7, 2, 0, 0, 0)
         self.timerange = expression.TimeRange(self.begin_dt, self.end_dt)
 
     def test_timerange_properties(self):
@@ -131,20 +148,20 @@ class TestTimeRange(unittest.TestCase):
         self.assertEqual(self.begin_dt, self.timerange.timestamp)
 
     def test_match(self):
-        #ranges include the beginning.
+        # ranges include the beginning.
         self.assertTrue(self.timerange.match(self.begin_dt))
         self.assertTrue(self.timerange.match(self.middle_dt))
 
-        #ranges *don`t* include the end.
+        # ranges *don`t* include the end.
         self.assertFalse(self.timerange.match(self.end_dt))
         self.assertFalse(self.timerange.match(self.other_dt))
 
     def test_in(self):
-        #ranges include the beginning.
+        # ranges include the beginning.
         self.assertTrue(self.begin_dt in self.timerange)
         self.assertTrue(self.middle_dt in self.timerange)
 
-        #ranges *don`t* include the end.
+        # ranges *don`t* include the end.
         self.assertFalse(self.end_dt in self.timerange)
         self.assertFalse(self.other_dt in self.timerange)
 
@@ -234,7 +251,6 @@ class TestTimeRange(unittest.TestCase):
         self.assertEqual(res.begin, expected_begin)
         self.assertEqual(res.end, expected_end)
 
-
     def test_replace(self):
         expected_begin = datetime.datetime(2014, 8, 1, 6, 10, 23, 550)
         expected_end = datetime.datetime(2014, 8, 2, 6, 10, 23, 550)
@@ -256,7 +272,8 @@ class TestTimeRange(unittest.TestCase):
 
         expected_begin = datetime.datetime(2014, 8, 1, 0, 0, 0, 0)
         expected_end = datetime.datetime(2014, 8, 2, 0, 0, 0, 0)
-        res = self.timerange % expression.Duration(hour=0, minute=0, second=0, microsecond=0)
+        res = self.timerange % expression.Duration(hour=0, minute=0, second=0,
+                                                   microsecond=0)
         self.assertEqual(res.begin, expected_begin)
         self.assertEqual(res.end, expected_end)
 
@@ -283,17 +300,16 @@ class TestTimeRange(unittest.TestCase):
 
     def test_total_seconds(self):
         self.assertTrue(self.timerange.is_range)
-        self.assertEqual(self.timerange.total_seconds(), 24*60*60)
+        self.assertEqual(self.timerange.total_seconds(), 24 * 60 * 60)
 
 
 class TestPinnedTimeRange(unittest.TestCase):
-
     def setUp(self):
         super(TestPinnedTimeRange, self).setUp()
         self.begin_dt = datetime.datetime(2014, 8, 1, 1, 0, 0, 0)
         self.end_dt = datetime.datetime(2014, 8, 2, 1, 0, 0, 0)
-        self.middle_dt = datetime.datetime(2014, 8, 1, 17 ,30, 10, 25)
-        self.other_dt = datetime.datetime(2014, 8, 7, 2 ,0, 0, 0)
+        self.middle_dt = datetime.datetime(2014, 8, 1, 17, 30, 10, 25)
+        self.other_dt = datetime.datetime(2014, 8, 7, 2, 0, 0, 0)
         self.timerange = expression.PinnedTimeRange(self.begin_dt,
                                                     self.end_dt,
                                                     self.middle_dt,
@@ -340,7 +356,6 @@ class TestPinnedTimeRange(unittest.TestCase):
 
 
 class TestDuration(unittest.TestCase):
-
     def setUp(self):
         super(TestDuration, self).setUp()
         self.second = expression.Duration(second=1)
@@ -377,4 +392,3 @@ class TestDuration(unittest.TestCase):
             self.assertEqual(dd[unit], 1)
         for unit in ('microsecond', 'minute', 'month', 'year', 'unknown'):
             self.assertNotIn(unit, dd)
-

@@ -1,6 +1,23 @@
-import logging
-import datetime
+#!/usr/bin/env python
+# -*- encoding: utf-8 -*-
+#
+# Copyright © 2014 Rackspace Hosting.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
 import abc
+import datetime
+import logging
 import six
 
 
@@ -25,7 +42,6 @@ class TimexExpressionError(TimexError):
 
 @six.add_metaclass(abc.ABCMeta)
 class TimeMatcher(object):
-
     _allow_ambig_duration = False
 
     @abc.abstractmethod
@@ -60,10 +76,9 @@ class TimeMatcher(object):
     def _check_duration(self, duration):
         if isinstance(duration, Duration):
             if ((duration.ambiguous and self._allow_ambig_duration)
-                or not duration.ambiguous):
+                    or not duration.ambiguous):
                 return True
         raise TimexExpressionError("Invalid duration for time operation")
-
 
     def _dt_replace(self, dt, duration):
         return dt.replace(**duration.as_dict)
@@ -73,15 +88,16 @@ class TimeMatcher(object):
         months = d.pop('month', 0)
         years = d.pop('year', 0)
         if d:
-            delta = datetime.timedelta(**dict((k+"s",val) for k, val in d.items()))
+            delta = datetime.timedelta(
+                **dict((k + "s", val) for k, val in d.items()))
             dt = dt + delta
         if months:
             newmonth = dt.month + months
             years += (newmonth - 1) // 12
-            newmonth = ((newmonth-1) % 12) + 1
+            newmonth = ((newmonth - 1) % 12) + 1
             dt = dt.replace(month=newmonth)
         if years:
-            dt = dt.replace(year=(dt.year+years))
+            dt = dt.replace(year=(dt.year + years))
         return dt
 
     def _dt_sub(self, dt, duration):
@@ -89,21 +105,21 @@ class TimeMatcher(object):
         months = d.pop('month', 0)
         years = d.pop('year', 0)
         if d:
-            delta = datetime.timedelta(**dict((k+"s",val) for k, val in d.items()))
+            delta = datetime.timedelta(
+                **dict((k + "s", val) for k, val in d.items()))
             dt = dt - delta
         if months:
             newmonth = dt.month - months
             years -= (newmonth - 1) // 12
-            newmonth = ((newmonth-1) % 12) + 1
+            newmonth = ((newmonth - 1) % 12) + 1
             dt = dt.replace(month=newmonth)
         if years:
-            dt = dt.replace(year=(dt.year-years))
+            dt = dt.replace(year=(dt.year - years))
         return dt
 
 
 class Timestamp(TimeMatcher):
-    """This is a wrapper on a datetime that has the same
-       interface as TimeRange"""
+    """Wrapper on a datetime with same interface as TimeRange"""
 
     def __init__(self, dt):
         self.timestamp = dt
@@ -136,7 +152,6 @@ class Timestamp(TimeMatcher):
 
 
 class TimeRange(TimeMatcher):
-
     _allow_ambig_duration = True
 
     def __init__(self, begin, end):
@@ -149,7 +164,8 @@ class TimeRange(TimeMatcher):
 
     def total_seconds(self):
         delta = self.end - self.begin
-        return delta.seconds + (delta.days * 24 * 3600) + (delta.microseconds * 1e-6)
+        return (delta.seconds + (delta.days * 24 * 3600) +
+                (delta.microseconds * 1e-6))
 
     def __nonzero__(self):
         return self.total_seconds() > 0
@@ -159,7 +175,10 @@ class TimeRange(TimeMatcher):
         return True
 
     def match(self, dt):
-        """TimeRanges match datetimes from begin (inclusive) to end (exclusive)"""
+        """Match datetimes
+
+        TimeRanges match datetimes from begin (inclusive) to end (exclusive)
+        """
         return dt >= self.begin and dt < self.end
 
     def __add__(self, other):
@@ -236,11 +255,11 @@ class PinnedTimeRange(TimeRange):
         return self.time_range
 
     def __repr__(self):
-        return "PinnedTimeRange from %r to %r. Pinned to %s(%r)" % (self.begin, self.end, self.unit, self.pinned_to)
+        return ("PinnedTimeRange from %r to %r. Pinned to %s(%r)"
+                % (self.begin, self.end, self.unit, self.pinned_to))
 
 
 class Environment(dict):
-
     def time_func_hour(self, timestamp):
         dt = timestamp.timestamp
         begin = dt.replace(minute=0, second=0, microsecond=0)
@@ -261,20 +280,20 @@ class Environment(dict):
 
     def time_func_year(self, timestamp):
         dt = timestamp.timestamp
-        begin = dt.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+        begin = dt.replace(month=1, day=1, hour=0, minute=0, second=0,
+                           microsecond=0)
         end = Timestamp(begin) + Duration(year=1)
         return PinnedTimeRange(begin, end.timestamp, dt, 'year')
 
 
 @six.add_metaclass(abc.ABCMeta)
 class TimeExpression(object):
-
     @abc.abstractmethod
     def apply(self, env):
         """Apply the expression to a given set of arguments.
 
-        :param env: a dictionary-like object. expression functions should be methods
-             on this object with names beginning with 'time_func_'
+        :param env: a dictionary-like object. expression functions should
+        be methods on this object with names beginning with 'time_func_'
         returns: TimeMatcher instance
         """
 
@@ -308,7 +327,8 @@ class TimeRangeFunction(TimeRangeExpression):
         self.expr = expr
 
     def __repr__(self):
-        return '%s %s(%r)' % (self.__class__.__name__, self.func_name, self.expr)
+        return ('%s %s(%r)'
+                % (self.__class__.__name__, self.func_name, self.expr))
 
     def apply(self, env):
         arg = self.expr.apply(env)
@@ -341,7 +361,8 @@ class Operation(TimeExpression):
         self.duration = duration
 
     def __repr__(self):
-        return '%s(%r, %r)' % (self.__class__.__name__, self.expr, self.duration)
+        return ('%s(%r, %r)'
+                % (self.__class__.__name__, self.expr, self.duration))
 
 
 class Replace(Operation):
@@ -366,11 +387,10 @@ class Minus(Operation):
 
 
 class Duration(object):
-
-    UNIT_SIZES = {'year': 365*24*60*60,
-                  'month': 28*24*60*60,
-                  'day': 24*60*60,
-                  'hour': 60*60,
+    UNIT_SIZES = {'year': 365 * 24 * 60 * 60,
+                  'month': 28 * 24 * 60 * 60,
+                  'day': 24 * 60 * 60,
+                  'hour': 60 * 60,
                   'minute': 60,
                   'second': 1,
                   'microsecond': 1e-6}
@@ -423,7 +443,7 @@ class Duration(object):
         elif d >= self.UNIT_SIZES['minute']:
             unit = 'second'
         else:
-            unit = microsecond
+            unit = 'microsecond'
         vals = self.as_dict
         del vals['unknown']
         if unit in vals:
@@ -476,4 +496,3 @@ class Duration(object):
             if our_val != other_val:
                 return False
         return True
-

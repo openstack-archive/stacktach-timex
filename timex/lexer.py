@@ -1,5 +1,22 @@
-import sys
+#!/usr/bin/env python
+# -*- encoding: utf-8 -*-
+#
+# Copyright © 2014 Rackspace Hosting.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
 import logging
+import sys
 
 import ply.lex
 
@@ -16,8 +33,8 @@ class TimexLexer(object):
         self.debug = debug
         if not self.__doc__:
             raise TimexLexerError("Docstring information is missing. "
-                    "Timex uses PLY which requires docstrings for "
-                    "configuration.")
+                                  "Timex uses PLY which requires "
+                                  "docstrings for configuration.")
         self.lexer = ply.lex.lex(module=self,
                                  debug=self.debug,
                                  errorlog=logger)
@@ -36,19 +53,20 @@ class TimexLexer(object):
             token.col = token.lexpos - self.latest_newline
         return token
 
-    reserved_words = { 'to'  : 'TO',
-                       'us'  : 'MICROSECOND',
-                       's'   : 'SECOND',
-                       'sec' : 'SECOND',
-                       'm'   : 'MINUTE',
-                       'min' : 'MINUTE',
-                       'h'   : 'HOUR',
-                       'hr'  : 'HOUR',
-                       'd'   : 'DAY',
-                       'mo'  : 'MONTH',
-                       'y'   : 'YEAR',
-                       'yr'  : 'YEAR',
-                     }
+    reserved_words = {
+        'to': 'TO',
+        'us': 'MICROSECOND',
+        's': 'SECOND',
+        'sec': 'SECOND',
+        'm': 'MINUTE',
+        'min': 'MINUTE',
+        'h': 'HOUR',
+        'hr': 'HOUR',
+        'd': 'DAY',
+        'mo': 'MONTH',
+        'y': 'YEAR',
+        'yr': 'YEAR',
+    }
 
     tokens = ('NUMBER',
               'PLUS',
@@ -59,12 +77,12 @@ class TimexLexer(object):
               'VAR',
               'IDENTIFIER') + tuple(set(reserved_words.values()))
 
-    t_PLUS    = r'\+'
-    t_MINUS   = r'-'
+    t_PLUS = r'\+'
+    t_MINUS = r'-'
     t_REPLACE = r'@'
-    t_VAR     = r'\$'
-    t_LPAREN  = r'\('
-    t_RPAREN  = r'\)'
+    t_VAR = r'\$'
+    t_LPAREN = r'\('
+    t_RPAREN = r'\)'
 
     def t_IDENTIFIER(self, t):
         r'[a-zA-Z_][a-zA-Z0-9_]*'
@@ -76,13 +94,12 @@ class TimexLexer(object):
         t.value = int(t.value)
         return t
 
-
     def t_newline(self, t):
         r'\n+'
         t.lexer.lineno += len(t.value)
         self.latest_newline = t.lexpos
 
-    t_ignore  = ' \t'
+    t_ignore = ' \t'
 
     def t_error(self, t):
         raise TimexLexerError('Error on line %s, col %s: Unexpected character:'
@@ -99,4 +116,3 @@ if __name__ == '__main__':
     while token:
         print('%-20s%s' % (token.value, token.type))
         token = lexer.token()
-
